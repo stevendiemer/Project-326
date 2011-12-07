@@ -1,0 +1,11 @@
+extern void startAAI(byte A1,byte A2,byte A3,byte dat,byte dat2);
+extern void nextAAI(byte dat,byte dat2);
+extern void writeByte(byte A1,byte A2,byte A3,byte dat);
+extern byte readStatusRegister(void);
+extern void unprotect(byte);
+extern byte readByte(byte A1,byte A2,byte A3);
+extern void clearMemory(void);
+extern void clearRecordSector(void);
+extern void memWriteDisable(void);
+extern void memWriteEnable(void);
+extern void getSound(byte, byte, byte, int, int);
