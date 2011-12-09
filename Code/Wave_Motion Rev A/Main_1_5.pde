@@ -80,6 +80,8 @@ uint32_t increment = 0;    // Used to determine length of audio
 uint32_t increment2 = 0;   // Used to determine length of playback
 int memory_cleared = 0;    // Shows if memory has been cleared
 int ammo = 3;              // Initial ammo count upon power up
+int switch_flag = 0;
+int alternateMode = 0;
 
 /*****************************************************************
 * Configure Arduino with proper pin directions and with
@@ -138,6 +140,21 @@ void loop(){
   // Check to see if record mode is enabled
   while (digitalRead(RCRDMODE) == LOW){
     
+    /* Check for Toggling Modes of Audio Playback
+       When held upside down for 3 seconds, Mode is switched*/
+    while ((getAccelVal(YACCEL) < 270) && (alternateMode < 3))
+    { 
+      alternateMode++;                // Alternate Mode Counter
+      if (alternateMode >= 3)         // Check for 3 Seconds
+      {
+        switch_flag ^= 1;             // Toggle Play Mode
+        getSound(0x20, 0x00, 0x01, 25438, 15);  // Play Sound Indicating Change
+      }  
+      delay(1000);                    // Delay 1 second
+    }
+    
+    alternateMode = 0;                // Alternate Mode Counter
+    
     // While Record button is being held, write to memory        
     while (digitalRead(RCRD) == LOW)
     {
@@ -164,7 +181,6 @@ void loop(){
     
     memory_cleared = 0;            // Memory is no longer cleared
     digitalWrite(RCRD_LED, LOW);   // Record LED turned off to signify finished recording
-    Serial.println(increment);
     
     // If message has been recorded
     if(rcrd_flag == 1)
@@ -177,17 +193,22 @@ void loop(){
       delayMicroseconds(2);
   
       //Wait for user to press play or record or switch mode of operation
-      while(digitalRead(PLAY) == HIGH && digitalRead(RCRD) == HIGH && digitalRead(RCRDMODE) == LOW);
+      while((digitalRead(PLAY) == HIGH) && (digitalRead(RCRD) == HIGH) && (digitalRead(RCRDMODE) == LOW)
+                && (getAccelVal(YACCEL) > 270));
       
       // Check to see if user has pressed the Play button
       if(digitalRead(PLAY) == LOW)
       {
-        playAudio();    // Play recorded audio
+        if (switch_flag == 0)
+          playAudio();    // Play recorded audio
+        else
+          circlePlayback();
       }
-      else
+      else if ((digitalRead(RCRD) == LOW) || (digitalRead(RCRDMODE) == HIGH))
       {
         rcrd_flag = 0;  // Set as no message recorded
       }
+      else{}
     }
   }
   
@@ -253,6 +274,85 @@ void playAudio(){
   PORTB |= MEM_CS;                    // Stop talking to Memory
 }
 
+
+/********************************************************
+ * Circle Playback Mode
+ ********************************************************/
+void circlePlayback(){
+  int accelVal = 8;              // Default Value
+  increment2 = 0;                // Initialize Counter
+  volatile int accelMag = 0;     // Magnitude of Acceleration
+  volatile int x = 340;          // Default Acclerometer Values
+  volatile int y = 340;
+
+  digitalWrite(PLAY_LED, HIGH);  // Write Play LED High
+  PORTB &= ~MEM_CS;              // Select Memory SPI
+  SPI.transfer(RMEM);            // Read Memory Command
+  SPI.transfer(0);               // Byte Address 2
+  SPI.transfer(0);               // Byte Address 1
+  SPI.transfer(0);               // Byte Address 0
+
+  setADPS(ADC8);                 // ADC Prescale of 8
+
+  while(increment2 <= increment) // Playback Time
+  {
+    //DAC CS LOW
+    if (accelMag < 14)           // Playback When Appropriate Motion Detected
+    {
+      PORTB &= ~DAC_CS;          // Select Memory SPI
+      memMSB = SPI.transfer(0b01110000 | (memMSB>>4));    // Get MSB
+      memLSB = SPI.transfer((memMSB<<4) | (memLSB<<2));   // Get LSB
+      PORTB |= DAC_CS;           // Deselect Memory SPI
+
+      increment2++;              // Increment Counter
+    }
+    
+    TCNT1 = 0;                   // Delay to Allow ADC to Finish
+    while (TCNT1 < 2);
+    
+    y = ADC;                     // Get Y Acclerometer Value
+    y -= 60;                     // Reduce Value
+
+    //Start Conversion on X axis
+    setAdmux(XACCEL);            // Configure ADC for X axis
+    ADCSRA |= _BV(ADSC);         // Start Conversion
+    if(y >= 335)                 // Find Magnitude from Center Value
+    {
+      y = y - 335;
+    }
+    else
+    {
+      y = 335 - y;
+    }
+    
+    if(x >= 335)                 // Find Magnitude from Center Value
+    {
+      x = x - 335;
+    }
+    else
+    {
+      x = 335 - x;
+    }
+    
+    accelMag = (x+y);            // Find Magnitude
+    accelMag = 15 - (accelMag/30);    // Reduce Value to Proper Playback Speed
+    
+    if (accelMag <=0)            // Set Accleration if too Low
+      accelMag = 3;
+      
+    TCNT1 = 0;                   // Delay Initialize
+    while(TCNT1 < (accelMag));   // Delay for Proper Sound Quality Playback
+
+    x = ADC;                     // Get X Accelerometer Value
+
+    //Start Conversion on Y-axis
+    setAdmux(YACCEL);            // Set Y Accelerometer Select ADC
+    ADCSRA |= _BV(ADSC);         // Start Y Axis Conversion
+  }
+
+  digitalWrite(PLAY_LED, LOW);   // Turn LED Low when Finished Playing
+  PORTB |= MEM_CS;               // Deselect Memory SPI
+}
 
 
 /****************************************************************
