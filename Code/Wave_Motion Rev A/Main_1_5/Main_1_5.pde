@@ -74,8 +74,9 @@ void playSFX();
 
 int sensorVal = 0;         // ADC value from Microphone
 byte rcrd_flag = 0;        // Determines if audio has been played
-byte memMSB = 0;           // Most Significant Bits for Memory
-byte memLSB = 0;           // Least Significant Bits for Memory
+volatile byte memMSB = 0;           // Most Significant Bits for Memory
+volatile byte memLSB = 0;           // Least Significant Bits for Memory
+volatile byte memMSB2 = 0;          // Temp Storage Variable
 uint32_t increment = 0;    // Used to determine length of audio
 uint32_t increment2 = 0;   // Used to determine length of playback
 int memory_cleared = 0;    // Shows if memory has been cleared
@@ -111,9 +112,9 @@ void setup(){
   PORTB |= MEM_CS;
 
   // SPI Enable, Master Node
-  SPCR = _BV(SPE)|_BV(MSTR);
-  SPI.setClockDivider(SPI_CLOCK_DIV8);  // Set SPI clock frequency
+  //SPCR = _BV(SPE)|_BV(MSTR);
   SPI.begin();
+  SPI.setClockDivider(SPI_CLOCK_DIV8);  // Set SPI clock frequency
   Serial.begin(9600);
   configureADC();         // Sets up ADC for mic input conversion
   
@@ -177,7 +178,9 @@ void loop(){
       
       while (ADCSRA & _BV(ADSC));  // Wait Until Conversion is done
       sensorVal = ADC;             // Obtains analog input from microphone
+      //Serial.println(sensorVal);
     }
+    // Serial.println("----------------------------------------");
     
     memory_cleared = 0;            // Memory is no longer cleared
     digitalWrite(RCRD_LED, LOW);   // Record LED turned off to signify finished recording
@@ -239,6 +242,7 @@ void record_init()
 void playAudio(){
   int accelVal = 8;      // Standard delay value for playback
   increment2=0;          // Counter for bytes sent
+  int data;
   
   digitalWrite(PLAY_LED, HIGH);  // Shows sound being played
   PORTB &= ~MEM_CS;              // Select memory to talk to
@@ -259,13 +263,14 @@ void playAudio(){
        
     //DAC CS LOW
     PORTB &= ~DAC_CS;         // Selects DAC to talk to via SPI
+    memMSB2 = memMSB;
     memMSB = SPI.transfer(DAC_HEADER | (memMSB>>4));  // Transfers first half of bits to DAC and gets next
-    memLSB = SPI.transfer((memMSB<<4) | (memLSB<<2)); // Transfers second half of bits and gets next
+    memLSB = SPI.transfer((memMSB2<<4) | (memLSB<<2)); // Transfers second half of bits and gets next
     PORTB |= DAC_CS;          // Stop talking to DAC
 
     increment2++;             // Increment bytes transferred
 
-    accelVal = ((ADC)-175)/15;        // Set delay for playback dependent on Accelerometer reading
+    accelVal = ((ADC)-175)/18;        // Set delay for playback dependent on Accelerometer reading
     if(accelVal > 30 | accelVal < 0)  // Set maximum and minimum playback constraints
       accelVal = 8;                   // Default playback value
   }
@@ -300,8 +305,9 @@ void circlePlayback(){
     if (accelMag < 14)           // Playback When Appropriate Motion Detected
     {
       PORTB &= ~DAC_CS;          // Select Memory SPI
+      memMSB2 = memMSB;
       memMSB = SPI.transfer(0b01110000 | (memMSB>>4));    // Get MSB
-      memLSB = SPI.transfer((memMSB<<4) | (memLSB<<2));   // Get LSB
+      memLSB = SPI.transfer((memMSB2<<4) | (memLSB<<2));   // Get LSB
       PORTB |= DAC_CS;           // Deselect Memory SPI
 
       increment2++;              // Increment Counter

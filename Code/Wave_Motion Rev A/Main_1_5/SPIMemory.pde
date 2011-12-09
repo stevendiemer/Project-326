@@ -219,6 +219,7 @@ void getSound(byte AD2, byte AD1, byte AD0, int length, int timer)
     PORTB &= ~DAC_CS;               // Select DAC SPI
     TCNT1 = 0;                      // Initialize Timer
     while(TCNT1 < timer);           // Delay for Proper Playback Sound
+    
     memMSB = SPI.transfer(0b01110000 | (memMSB>>4));   // Get Byte for Playback 
     memLSB = SPI.transfer((memMSB<<4) | (memLSB<<2));  // Get Byte for Playback
     PORTB |= DAC_CS;                // Deselect DAC SPI
