@@ -5,7 +5,7 @@
 /***************************************************************
  * This is responsible for containing the bytes to be uploaded
  * into the flash memory of the Wave-Motion Board. The data
- * must be byte values between 0 and 127 in order to ensure
+ * must be byte values between 0 and 255 in order to ensure
  * proper playback. The number of bytes must not exceed 32256.
  * The number of bytes must be set below before uploading.
  * When placing the bytes in the array, each byte must be

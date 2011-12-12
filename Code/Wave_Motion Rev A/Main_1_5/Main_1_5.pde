@@ -1,4 +1,4 @@
-#include <SPI.h>
+w#include <SPI.h>
 #include "ADCSetup.h"
 #include "SPIMemory.h"
 #include "SoundEffects.h"
