@@ -25,10 +25,11 @@ module coins(
    input [10:0] vcount,
    input blank,
 	input [9:0] char_left,
-	input [9:0] char_right,
+	input [9:0] char_top,
    output r_coin,
    output g_coin,
-   output b_coin
+   output b_coin,
+	output reg [3:0] coin_display
    );
 
 reg [32:0]coin[0:31];
@@ -88,20 +89,20 @@ begin
     end
 	else if(((hcount == hstart1) && (vcount == vstart1) && (blank == 0)) || ((hcount == hstart2) && (vcount == vstart2) && (blank == 0)))
 	begin
-		if((hcount == hstart1) && (vcount == vstart1) && (blank == 0))
+		if((hcount == hstart1) && (vcount == vstart1) && (blank == 0) && (coin_display[3] == 1))
 		begin
 			vc1 <= 0;
 			rom_address1 <= 6'b0;
 			in_range1 <= 1;
 		end
-		else if((hcount == hstart2) && (vcount == vstart2) && (blank == 0))
+		else if((hcount == hstart2) && (vcount == vstart2) && (blank == 0) && (coin_display[2] == 1))
 		begin
 			vc2 <= 0;
 			rom_address2 <= 6'b0;
 			in_range2 <= 1;
 		end
 	end
-	else if((hcount >= hstart1) && (hcount <= hend1) && (vcount >= vstart1) && (vcount <= vend1) && (blank == 0))
+	else if((hcount >= hstart1) && (hcount <= hend1) && (vcount >= vstart1) && (vcount <= vend1) && (blank == 0) && (coin_display[3] == 1))
 	begin
 		if((hcount == hend1))
 		begin
@@ -115,7 +116,7 @@ begin
 			in_range1 <= 1;
 		end
 	end
-	else if((hcount >= hstart2) && (hcount <= hend2) && (vcount >= vstart2) && (vcount <= vend2) && (blank == 0))
+	else if((hcount >= hstart2) && (hcount <= hend2) && (vcount >= vstart2) && (vcount <= vend2) && (blank == 0) && (coin_display[2] == 1))
 	begin
 		if((hcount == hend2))
 		begin
@@ -153,20 +154,20 @@ begin
     end
 	else if(((hcount == hstart3) && (vcount == vstart3) && (blank == 0)) || ((hcount == hstart4) && (vcount == vstart4) && (blank == 0)))
 	begin
-		if((hcount == hstart3) && (vcount == vstart3) && (blank == 0))
+		if((hcount == hstart3) && (vcount == vstart3) && (blank == 0) && (coin_display[1] == 1))
 		begin
 			vc3 <= 0;
 			rom_address3 <= 6'b0;
 			in_range3 <= 1;
 		end
-		else if((hcount == hstart4) && (vcount == vstart4) && (blank == 0))
+		else if((hcount == hstart4) && (vcount == vstart4) && (blank == 0) && (coin_display[0] == 1))
 		begin
 			vc4 <= 0;
 			rom_address4 <= 6'b0;
 			in_range4 <= 1;
 		end
 	end
-	else if((hcount >= hstart3) && (hcount <= hend3) && (vcount >= vstart3) && (vcount <= vend3) && (blank == 0))
+	else if((hcount >= hstart3) && (hcount <= hend3) && (vcount >= vstart3) && (vcount <= vend3) && (blank == 0) && (coin_display[1] == 1))
 	begin
 		if((hcount == hend3))
 		begin
@@ -180,7 +181,7 @@ begin
 			in_range3 <= 1;
 		end
 	end
-	else if((hcount >= hstart4) && (hcount <= hend4) && (vcount >= vstart4) && (vcount <= vend4) && (blank == 0))
+	else if((hcount >= hstart4) && (hcount <= hend4) && (vcount >= vstart4) && (vcount <= vend4) && (blank == 0) && (coin_display[0] == 1))
 	begin
 		if((hcount == hend4))
 		begin
@@ -255,6 +256,23 @@ begin
  else 
   INTENSITY <= 0;
 end
+
+always @(posedge clk or negedge reset)
+begin
+	if(!reset)
+		coin_display <= 4'b1111;
+	else if ((char_top <= vend1) && ((char_left == hend1) || ((char_left + 21) == hstart1)) && (coin_display[3] == 1))
+		coin_display <= coin_display - 8;
+	else if ((char_top <= vend2) && ((char_left == hend2) || ((char_left + 21) == hstart2)) && (coin_display[2] == 1))
+		coin_display <= coin_display - 4;
+	else if ((char_top <= vend3) && ((char_left == hend3) || ((char_left + 21) == hstart3)) && (coin_display[1] == 1))
+		coin_display <= coin_display - 2;
+	else if ((char_top <= vend4) && ((char_left == hend4) || ((char_left + 21) == hstart4)) && (coin_display[0] == 1))
+		coin_display <= coin_display - 1;
+	else
+		coin_display <= coin_display;
+end
+	
 
 
 assign r_coin = (blank == 0) ? {{INTENSITY}} : 3'b0;

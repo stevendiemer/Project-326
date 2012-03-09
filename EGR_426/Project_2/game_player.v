@@ -31,7 +31,7 @@ module game_player(
     output g,
     output b,
 	 output [9:0] location_left,
-	 output [9:0] location_right
+	 output [9:0] location_top
     );
 	 
 reg [9:0] top_pth_top = 300;
@@ -163,7 +163,7 @@ assign b = (((hcount < (hp - 311)) && (hcount >= (hp - 328)) && (((vcount < (vp 
 			|| ((hcount < (hp - 320)) && (hcount >= (hp - 329)) && ((vcount < (vp - 215)) && (vcount >= (vp - 230))) && (blank == 0))
 			|| ((hcount < (hp - 310)) && (hcount >= (hp - 319)) && ((vcount < (vp - 215)) && (vcount >= (vp - 230))) && (blank == 0)));
 			
-assign location_right = (hp - 309);
+assign location_top = (vp - 265);
 assign location_left = (hp - 330);
 
 endmodule

@@ -28,6 +28,9 @@ module display_driver(
 	 input r_coin,
 	 input g_coin,
 	 input b_coin,
+	 input r_mess,
+	 input g_mess,
+	 input b_mess,
     output r_buf,
     output g_buf,
     output b_buf
