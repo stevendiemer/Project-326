@@ -36,8 +36,8 @@ module display_driver(
     output b_buf
     );
 
-assign r_buf = (r_back || r_char || r_coin);
-assign g_buf = (g_back || g_char || g_coin);
-assign b_buf = (b_back || b_char || b_coin);
+assign r_buf = (r_mess) ? r_mess : (r_back || r_char || r_coin);
+assign g_buf = (g_mess) ? g_mess : (g_back || g_char || g_coin);
+assign b_buf = (b_mess) ? b_mess : (b_back || b_char || b_coin);
 
 endmodule
