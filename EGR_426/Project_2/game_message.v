@@ -23,6 +23,7 @@ module game_message(
 	 input [10:0] hcount, 
 	 input [10:0] vcount,
 	 input clk,
+	 input clk_250,
 	 input rst,
 	 input blank,
     output r_win,
@@ -35,16 +36,20 @@ reg [256:0]loss[0:127];
 reg [8:0]rom_address;
 reg INTENSITY;
 reg in_range;
+reg [9:0]time_remaining;
+reg loser;
 wire [255:0]rom_data;
 
 reg [8:0]hc1, vc1;
 
-
-initial
-begin
-$readmemb("win.dat", win);
-$readmemb("loss.dat", loss);
+initial 
+begin 
+	time_remaining = 1000; 
+	loser = 0;
 end
+
+initial $readmemb("win.dat", win);
+initial $readmemb("loss.dat", loss);
 
 always @(posedge clk or negedge rst)
 begin
@@ -55,14 +60,14 @@ begin
 		in_range <= 0;
    end
 	
-	else if((hcount == 192) && (vcount == 176) && (blank == 0) && (coins_left == 4'b0))
+	else if((hcount == 192) && (vcount == 176) && (blank == 0))
 	begin
 			vc1 <= 0;
 			rom_address <= 9'b0;
 			in_range <= 1;
 	end
 	
-	else if((hcount > 192) && (hcount <= 448) && (vcount > 176) && (vcount <= 304) && (blank == 0)  && (coins_left == 4'b0))
+	else if((hcount > 192) && (hcount <= 448) && (vcount > 176) && (vcount <= 304) && (blank == 0))
 	begin
 		if((hcount == 448))
 		begin
@@ -91,7 +96,7 @@ begin
 		hc1 <= 9'b0;
 	end
 	
-	else if((hcount > 192) && (hcount <= 448) && (blank == 0)  && (coins_left == 4'b0))
+	else if((hcount > 192) && (hcount <= 448) && (blank == 0))
 	begin
 		if((hcount > 192) && (hcount <= 448) && (vcount > 176) && (vcount <= 304) && (blank == 0))
 			hc1 <= hc1 + 1;
@@ -103,26 +108,45 @@ begin
 	end
 end
 
-assign rom_data = (timer > 0) ? win[rom_address] : loss[rom_address];			// Get ROM data
+assign rom_data = (time_remaining == 0) ? (((coins_left == 4'b0) && (loser != 1)) ? win[rom_address] : loss[rom_address]) : 0;	//ALTERNATIVE HERE?
+
+always @(posedge clk_250 or negedge rst)
+begin
+	if (!rst)
+	begin
+		time_remaining <= 1000;
+		loser = 0;
+	end
+	
+	else if (time_remaining > 0)
+		time_remaining <= time_remaining - 1;
+		
+	else if (time_remaining == 0)
+	begin
+		time_remaining <= 0;
+		if(coins_left > 0)
+			loser = 1;
+	end
+	
+	else
+		time_remaining <= 1000;
+end
 
 // Procedural block to assign pixel values to RGB
 always @(posedge clk or negedge rst)
 begin
- if(!rst)
-  INTENSITY <= 0;
+	if(!rst)
+		INTENSITY <= 0;
   
- else if(in_range && (blank == 0))
- begin
-	if(in_range && (blank == 0))
+	else if((in_range) && (blank == 0))
 		INTENSITY <= rom_data[hc1];
- end
  
- else 
-   INTENSITY <= 0;
+	else 
+		INTENSITY <= 0;
 end
 
 assign r_win = (blank == 0) ? {{INTENSITY}} : 3'b0;
 assign g_win = (blank == 0) ? {{INTENSITY}} : 3'b0;
-assign b_win = (blank == 0) ? {{INTENSITY}} : 3'b0;
+assign b_win = (blank == 0) ? {{INTENSITY}} : 2'b0;
 
 endmodule

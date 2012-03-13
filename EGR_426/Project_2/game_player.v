@@ -27,6 +27,7 @@ module game_player(
 	 input up,
 	 input down,
 	 input move_clock,
+	 input reset,
     output r,
     output g,
     output b,
@@ -57,9 +58,15 @@ reg [9:0] vp = 10'b0111100000;
 
 reg [2:0] button_pressed = 3'b100;
 
-always @(posedge move_clock)
+always @(posedge move_clock or negedge reset)
 begin
-	if(left || right)
+	if(!reset)
+	begin
+		hp = 10'b1010000000;
+		vp = 10'b0111100000;
+	end
+
+	else if(left || right)
 	begin
 		if (((vp >= top_pth_top) && (vp < top_pth_bot))
 			|| ((vp >= mid_pth_top) && (vp < mid_pth_bot))
@@ -99,7 +106,7 @@ begin
 			
 	end
 	
-	if(up || down)
+	else if(up || down)
 	begin
 		if (((hp >= left_pth_left) && (hp < left_pth_right))
 			|| ((hp >= cent_pth_left) && (hp < cent_pth_right))

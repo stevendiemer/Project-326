@@ -21,21 +21,39 @@
 module count_down(
     input clk_250,
 	 input rst,
-    output [1:0] time_remaining
+    output reg timer_flag
     );
-
-reg [1:0]count_down = 2'b11;
+	 
+reg [1:0] time_remaining;
+	 
+initial begin time_remaining = 2'b11;
+end
 
 always @(posedge clk_250 or negedge rst)
 begin
 	if(!rst)
-		count_down <= 2'b11;
-	else if (clk_250 && (count_down > 0))
-		count_down <= count_down - 1;
+	begin
+		time_remaining <= 2'b11;
+		timer_flag = 0;
+	end
+	
+	else if (time_remaining > 2'b00)
+	begin
+		time_remaining <= time_remaining - 1;
+		timer_flag = 0;
+	end
+	
+	else if (time_remaining == 2'b00)
+	begin
+		time_remaining <= 0;
+		timer_flag = 0;
+	end
+	
 	else
-		count_down <= count_down;
+	begin
+		time_remaining <= 2'b11;
+		timer_flag = 0;
+	end
 end
-
-assign time_remaining = count_down;
 
 endmodule

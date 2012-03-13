@@ -20,3 +20,7 @@ NET "down_in" LOC = B18;
 NET "left_in" LOC = H13;
 NET "right_in" LOC = E18;
 NET "up_in" LOC = D18;
+NET "an_0" LOC = F17;
+NET "an_1" LOC = H17;
+NET "an_2" LOC = C18;
+NET "an_3" LOC = F15;
