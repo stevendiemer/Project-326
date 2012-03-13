@@ -14,27 +14,28 @@
 // Dependencies: 
 //
 // Revision: 
-// Revision 0.01 - File Created
+// Revision 2.0 - Playable files
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
 module game_player(
     input blank,
-    input [10:0] hcount,
+    input [10:0] hcount,				// Screen placement
     input [10:0] vcount,
 	 input left,
-	 input right,
+	 input right,							// Movement buttons
 	 input up,
 	 input down,
-	 input move_clock,
+	 input move_clock,					// Clock for player movement
 	 input reset,
     output r,
-    output g,
+    output g,								// Player output colors
     output b,
-	 output [9:0] location_left,
+	 output [9:0] location_left,		// Location for player
 	 output [9:0] location_top
     );
 	 
+/* Movable paths for the player to be in valid range */	 
 reg [9:0] top_pth_top = 300;
 reg [9:0] top_pth_bot = 315;
 
@@ -62,85 +63,85 @@ always @(posedge move_clock or negedge reset)
 begin
 	if(!reset)
 	begin
-		hp = 10'b1010000000;
+		hp = 10'b1010000000;						// Set initial placement for player
 		vp = 10'b0111100000;
 	end
 
-	else if(left || right)
+	else if(left || right)						// Check if left or right is selected
 	begin
-		if (((vp >= top_pth_top) && (vp < top_pth_bot))
+		if (((vp >= top_pth_top) && (vp < top_pth_bot))				// Check if in range
 			|| ((vp >= mid_pth_top) && (vp < mid_pth_bot))
 			|| ((vp >= bot_pth_top) && (vp < bot_pth_bot)))
 		begin
-			if ((hp == 10'd340) && left)
+			if ((hp == 10'd340) && left)									// Check for if player goes off screen left
 			begin
 				hp = 10'd940;
 				button_pressed = 3'b0;
 			end
-			else if ((hp == 10'd940) && right)
+			else if ((hp == 10'd940) && right)							// Check for if player goes off screen right
 			begin
 				hp = 10'd340;
 				button_pressed = 3'b001;
 			end
-			else if (left)
+			else if (left)														// Move left
 			begin
 				hp = hp - 1;
 				button_pressed = 3'b0;
 			end
-			else if (right)
+			else if (right)													// Move right
 			begin
 				hp = hp + 1;
 				button_pressed = 3'b001;
 			end
 			else
 			begin
-				hp = hp;
+				hp = hp;															// Do nothing
 				button_pressed = 3'b100;
 			end
 		end
 		else
 		begin
 			hp = hp;
-			button_pressed = 3'b100;
+			button_pressed = 3'b100;										// Do nothing
 		end
 			
 	end
 	
-	else if(up || down)
+	else if(up || down)														// Check if possible to move up or down
 	begin
-		if (((hp >= left_pth_left) && (hp < left_pth_right))
+		if (((hp >= left_pth_left) && (hp < left_pth_right))		// Check if in range
 			|| ((hp >= cent_pth_left) && (hp < cent_pth_right))
 			|| ((hp >= right_pth_left) && (hp < right_pth_right)))
 		begin
-			if ((vp == 10'd305) && up)
+			if ((vp == 10'd305) && up)										// Check if at top
 			begin
 				vp = 10'd305;
 				button_pressed = 3'b010;
 			end
-			else if ((vp == 10'd655) && down)
+			else if ((vp == 10'd655) && down)							// Check if at bottom
 			begin
 				vp = 10'd655;
 				button_pressed = 3'b011;
 			end
-			else if (up)
+			else if (up)														// Move up
 			begin
 				vp = vp - 1;
 				button_pressed = 3'b010;
 			end
-			else if (down)
+			else if (down)														// Move down
 			begin
 				vp = vp + 1;
 				button_pressed = 3'b011;
 			end
 			else
 			begin
-				vp = vp;
+				vp = vp;															// Do nothing
 				button_pressed = 3'b100;
 			end
 		end
 		else
 		begin
-			vp = vp;
+			vp = vp;																// Do nothing
 			button_pressed = 3'b100;
 		end
 	end
@@ -151,6 +152,8 @@ begin
 	end
 end
 
+
+/* Display character line by line. hp and vp used for moving the player */
 assign r = (((hcount < (hp - 318)) && (hcount >= (hp - 321)) && ((vcount < (vp - 264)) && (vcount >= (vp - 265))) && (blank == 0))
 		   || ((hcount < (hp - 313)) && (hcount >= (hp - 326)) && ((vcount < (vp - 263)) && (vcount >= (vp - 264))) && (blank == 0))
 			|| ((hcount < (hp - 311)) && (hcount >= (hp - 328)) && (((vcount < (vp - 262)) && (vcount >= (vp - 263))) || ((vcount < (vp - 260)) && (vcount >= (vp - 261)))) && (blank == 0))

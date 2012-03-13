@@ -1,14 +1,14 @@
 
 
-NET "HS" LOC = T4;
-NET "VS" LOC = U3;
+NET "HS" LOC = T4;				// Hsync for screen
+NET "VS" LOC = U3;				// Vsync for screen
 NET "blue_0" LOC = U5;
 NET "blue_1" LOC = U4;
 NET "clk" LOC = B8;
 NET "green_0" LOC = N8;
 NET "green_1" LOC = P8;
 NET "green_2" LOC = P6;
-NET "red_0" LOC = R9;
+NET "red_0" LOC = R9;			// Graphics display
 NET "red_1" LOC = T8;
 NET "red_2" LOC = R8;
 NET "reset" LOC = G18;
@@ -16,11 +16,11 @@ NET "reset" LOC = G18;
 
 # PlanAhead Generated physical constraints 
 
-NET "down_in" LOC = B18;
+NET "down_in" LOC = B18;		// Movement buttons
 NET "left_in" LOC = H13;
 NET "right_in" LOC = E18;
 NET "up_in" LOC = D18;
-NET "an_0" LOC = F17;
+NET "an_0" LOC = F17;			// Turn anodes off
 NET "an_1" LOC = H17;
 NET "an_2" LOC = C18;
 NET "an_3" LOC = F15;

@@ -14,16 +14,16 @@
 // Dependencies: 
 //
 // Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
+// Revision 2.0 - Playable files
+// Additional Comments: Responsible for coloring the red background
 //
 //////////////////////////////////////////////////////////////////////////////////
 module static_background(
     input blank,
-    input [10:0] hcount,
-    input [10:0] vcount,
+    input [10:0] hcount,			// Screen placement horizontal
+    input [10:0] vcount,			// Screen placement vertical
     output r,
-    output g,
+    output g,							// Color Output
     output b
 );
 
