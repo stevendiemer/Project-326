@@ -21,7 +21,7 @@
 module alu(A, B, F, Y, N, V, Z);
 
 input signed [7:0]A,B;
-input [2:0]F;
+input [3:0]F;
 output signed [7:0]Y;
 output N,V,Z;
 
@@ -68,7 +68,7 @@ always @(A or B or F)
 	 if(RETVAL == 8'b10000000)
 	   V = 1;	
 	end
-  else										  // ----- CLR
+  else if (F == 7)										  // ----- CLR
     RETVAL = 8'b0;
 	 
   if(RETVAL == 0)			// ZERO flag

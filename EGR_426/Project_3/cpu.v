@@ -28,7 +28,7 @@ reg [7:0]Outport0,Outport1;
 
 // ------- Declare signals interfacing to ALU ---------
 reg signed [7:0]ALU_A, ALU_B;
-wire [2:0]ALU_FUNC;
+wire [3:0]ALU_FUNC;
 wire signed [7:0]ALU_OUT;
 wire signed ALU_N, ALU_V, ALU_Z;
 
@@ -77,12 +77,39 @@ reg Exc_IOWrite;        // Latch data bus in I/O
 function Is4Phase;
 input [7:0]DATA;
  begin
-  if(DATA[7:3] == 5'b0)
+  if(DATA[7:6] == 2'b01)
    Is4Phase = 1;
-  else
+  else if(DATA[7:6] == 2'b00)
    Is4Phase = 0;
  end
 endfunction
+
+function [7:0]sev_seg_decode;
+input [3:0]display;
+	begin
+	case(display)
+		4'b0000: sev_seg_decode = 8'b11000000;
+		4'b0001: sev_seg_decode = 8'b11111001;
+		4'b0010: sev_seg_decode = 8'b10100100;
+		4'b0011: sev_seg_decode = 8'b10110000;
+		4'b0100: sev_seg_decode = 8'b10011001;
+		4'b0101: sev_seg_decode = 8'b10010010;
+		4'b0110: sev_seg_decode = 8'b10000010;
+		4'b0111: sev_seg_decode = 8'b11111000;
+		4'b1000: sev_seg_decode = 8'b10000000;
+		4'b1001: sev_seg_decode = 8'b10011000;
+		4'b1010: sev_seg_decode = 8'b10001000;
+		4'b1011: sev_seg_decode = 8'b10000011;
+		4'b1100: sev_seg_decode = 8'b11000110;
+		4'b1101: sev_seg_decode = 8'b10100001;
+		4'b1110: sev_seg_decode = 8'b10000110;
+		4'b1111: sev_seg_decode = 8'b10001110;
+		default: sev_seg_decode = 8'b11111111;
+	endcase
+	end
+endfunction
+	
+	
 
 
 // ---------------- Instantiating ALU -------------------
@@ -90,20 +117,20 @@ alu U1(.A(ALU_A), .B(ALU_B), .F(ALU_FUNC), .Y(ALU_OUT), .N(ALU_N), .V(ALU_V), .Z
 
 
 // ----- Drive the ALU_FUNC input ------
-assign ALU_FUNC = IR[6:4];
+assign ALU_FUNC = IR[5:2];
 
 
 // ------------------ Instantiating 512x8 RAM -----------------------
-//microram U2(.CLOCK(clk), .ADDRESS(ADDR), .DATAOUT(RAM_DATA_OUT), .DATAIN(DATA), .WE(RAM_WE)); // For Implementation
+microram U2(.CLOCK(clk), .ADDRESS(ADDR), .DATAOUT(RAM_DATA_OUT), .DATAIN(DATA), .WE(RAM_WE)); // For Implementation
 
-microram_sim U2(.clka(clk),.dina(DATA),.addra(ADDR),.wea(RAM_WE),.douta(RAM_DATA_OUT));	// For simulation
+//microram_sim U2(.clka(clk),.dina(DATA),.addra(ADDR),.wea(RAM_WE),.douta(RAM_DATA_OUT));	// For simulation
 
 // ----------------- Generate RAM write enable --------------------
 //	-- The address and data are presented to the RAM during the Memory phase, hence this is
 //	-- when we need to set RAM_WE high.
 always @(CurrState or IR)
 begin
- if((CurrState == Memory) && (IR[7:2] == 6'b000001))
+ if((CurrState == Memory) && (IR[7:2] == 6'b010001))
     RAM_WE <= 1;
  else
     RAM_WE <= 0;
@@ -227,20 +254,20 @@ begin
  Execute: begin
            case(IR[7:1])
 			   
-				7'b1000000,			// ADD R
-				7'b1001000,			// SUB R
-				7'b1100000,			// XOR R
-				7'b1111000: 		// CLR R
+				7'b0000000,			// ADD R
+				7'b0000010,			// SUB R
+				7'b0001000,			// XOR R
+				7'b0001110: 		// CLR R
 				            begin
 								 DATA = ALU_OUT;
 						       Exc_RegWrite = 1;
 						       Exc_CCWrite = 1;
 								end
 				
-            7'b1010000,			// LSL R
-				7'b1011000,			// LSR R
-				7'b1101000,			// COM R
-				7'b1110000: 		// NEG R		
+            7'b0000100,			// LSL R
+				7'b0000110,			// LSR R
+				7'b0001010,			// COM R
+				7'b0001100: 		// NEG R		
                         begin
                          if(IR[0] == 0)
                             ALU_A = A;
@@ -252,19 +279,19 @@ begin
 								end
 					
 					
-				7'b0000100,
-				7'b0000101:			// OUT R,P
+				7'b0010000,
+				7'b0010001:			// OUT R,P
 							   begin
                          if(IR[0] == 0)
-								    DATA = A;
+								    DATA = sev_seg_decode(A);
 								 else
-								    DATA = B;
+								    DATA = sev_seg_decode(B);
 								 Exc_IOWrite = 1;
 								end
 								
 				
-				7'b0000110,
-				7'b0000111:			// IN P,R
+				7'b0010010,
+				7'b0010011:			// IN P,R
 							   begin
                          if(IR[1] == 0)
 								    DATA = Inport0;
@@ -274,16 +301,25 @@ begin
 								end			
 
 
-				7'b0000000,
-				7'b0000001:			// LOAD M,R
+				7'b0100000,
+				7'b0100001:			// LOAD M,R
 							   begin
                          DATA = RAM_DATA_OUT;
 								 Exc_RegWrite = 1;
-								end							
- 
-  
-				7'b0000010,
-				7'b0000011:			// STORE R,M
+								end
+
+				7'b0010100,
+				7'b0010101:			// BCDO
+								begin
+									if(IR[1] == 0)
+										DATA = sev_seg_decode(Inport0[3:0]);
+									else if (IR[1] == 1)
+										DATA = sev_seg_decode(Inport0[7:4]);
+									Exc_IOWrite = 1;
+								end
+				
+				7'b0100010,
+				7'b0100011:			// STORE R,M
 							   ; // NULL statement
 								
 				default: ;

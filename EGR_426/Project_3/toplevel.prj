@@ -1,5 +1,8 @@
 verilog work "ipcore_dir/testfile.v"
+verilog work "multiplexer.v"
+verilog work "Clk_250.v"
 verilog work "../cpu_files/microram.v"
 verilog work "../cpu_files/alu.v"
+verilog work "sev_seg_display.v"
 verilog work "../cpu_files/cpu.v"
 verilog work "toplevel.vf"

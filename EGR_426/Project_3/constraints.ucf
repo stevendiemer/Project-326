@@ -16,6 +16,28 @@ NET "OUTPUT<6>"  LOC = "F4"  ;
 NET "OUTPUT<7>"  LOC = "R4"  ;
 NET "RESET"  LOC = "D18"  ;		#Button 1
 
+NET "CLK_50" LOC = B8;
+NET "sev_seg[0]" LOC = L18;
+NET "sev_seg[1]" LOC = F18;
+NET "sev_seg[2]" LOC = D17;
+NET "sev_seg[3]" LOC = D16;
+NET "sev_seg[4]" LOC = G14;
+NET "sev_seg[5]" LOC = J17;
+NET "sev_seg[6]" LOC = H14;
+NET "sev_seg[7]" LOC = C17;
+NET "anode_out[0]" LOC = F17;
+NET "anode_out[1]" LOC = H17;
+NET "anode_out[2]" LOC = C18;
+NET "anode_out[3]" LOC = F15;
+NET "switches[0]" LOC = G18;
+NET "switches[1]" LOC = H18;
+NET "switches[2]" LOC = K18;
+NET "switches[3]" LOC = K17;
+NET "switches[4]" LOC = L14;
+NET "switches[5]" LOC = L13;
+NET "switches[6]" LOC = N17;
+NET "switches[7]" LOC = R17;
+
 #PACE: Start of PACE Area Constraints
 
 #PACE: Start of PACE Prohibit Constraints
